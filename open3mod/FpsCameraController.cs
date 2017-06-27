@@ -53,6 +53,7 @@ namespace open3mod
         public void SetPivot(Vector3 pivot)
         { }
 
+
         public Matrix4 GetView()
         {
             if(_dirty)
@@ -149,6 +150,9 @@ namespace open3mod
 
             UpdateViewMatrix();
         }
+
+        public void Yaw(float yaw) { }
+
     }
 }
 

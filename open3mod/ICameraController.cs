@@ -111,6 +111,9 @@ namespace open3mod
         /// <param name="roll">absolute rotation around the Z axis</param>
         /// <param name="yaw">absolute rotation around the Y axis</param>
         void LeapInput(float x, float y, float z, float pitch, float roll, float yaw);
+
+
+        void Yaw(float yaw);
     }
 }
 

@@ -31,6 +31,7 @@ using System.Windows.Forms;
 using System.Threading;
 
 using OpenTK;
+using System.Drawing.Imaging;
 
 #if LEAP
 using Leap;
@@ -68,6 +69,8 @@ namespace open3mod
 
         public delegate void TabSelectionChangeHandler(Tab tab);
         public event TabSelectionChangeHandler SelectedTabChanged;
+
+        public Boolean m_bCameraModeSet = false;
 
 
         public GLControl GlControl
@@ -1341,6 +1344,79 @@ namespace open3mod
         {
             // Keep in sync with CoreSettings.settings.
             CoreSettings.CoreSettings.Default.BackgroundColor = Color.DarkGray;
+        }
+
+        private void godFunction()
+        {
+            // want: rotate CW or CCW along plane of view POV  (the overhead look)
+            // --> soln = they implemented pitch and roll, but we need *yaw*
+            // first, lock on to Z-axis, then change back to Orbit camera mode
+
+            if (!m_bCameraModeSet)
+            {
+                UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
+                UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Orbit);
+                m_bCameraModeSet = true;
+            }
+            UiState.ActiveTab.ActiveCameraController.Yaw(10);  // in degrees
+
+            
+            
+        }
+
+        private void deleteMe()
+        {
+            // this pans the target to the right
+            //UiState.ActiveTab.ActiveCameraController.Pan(10, 0);
+
+            // this brings the target closer to the camera 
+            //UiState.ActiveTab.ActiveCameraController.Scroll(10);
+
+            // this rotates target along vertical axis of view POV 
+            //UiState.ActiveTab.ActiveCameraController.MouseMove(10, 0);
+
+            // this rotates target along horizontal axis of view POV 
+            //UiState.ActiveTab.ActiveCameraController.MouseMove(0, 10);
+        }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            godFunction();
+        }
+
+        private void toolStripButton2_Click(object sender, EventArgs e)
+        {
+            String fname;
+            Bitmap bmp;
+
+            for (int i = 0; i < 360; i++)
+            {
+                fname = "images/image-" + i.ToString() + ".png";
+                if (!m_bCameraModeSet)
+                {
+                    UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
+                    UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Orbit);
+                    m_bCameraModeSet = true;
+                }
+                UiState.ActiveTab.ActiveCameraController.Yaw(1);  // in degrees
+                Application.DoEvents();  // wait for OpenGL surface to go "idle" and redraw
+                glControl1.Refresh();
+
+                // I know this is deprecated, but it's simple and works today, which is enough
+                bmp = glControl1.GrabScreenshot();
+                bmp.Save(fname, ImageFormat.Png);
+            }
+            MessageBox.Show("done!");
+        }
+
+        private String getFilename()
+        {
+            return "image-" + getFormattedTimestamp() + ".png";
+        }
+
+        private String getFormattedTimestamp()
+        {
+            return DateTime.Now.ToString("yyyyMMddHHmmssff");
         }
     }
 }

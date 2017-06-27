@@ -226,6 +226,16 @@ namespace open3mod
             // leave the X,Z,Y constrained camera modes if we were in any of them
             SetOrbitOrConstrainedMode(CameraMode.Orbit);
         }
+
+
+        public void Yaw(float yaw)
+        {
+            Matrix4 yawrotation = Matrix4.CreateFromAxisAngle(_front, (float)(yaw * Math.PI / 180.0));
+            _view *= yawrotation;
+            _dirty = true;
+            // leave the X,Z,Y constrained camera modes if we were in any of them
+            SetOrbitOrConstrainedMode(CameraMode.Orbit);
+        }
     }
 }
 

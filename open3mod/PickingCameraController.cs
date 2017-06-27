@@ -87,6 +87,8 @@ namespace open3mod
         {
 
         }
+
+        public void Yaw(float yaw) { }
     }
 }
 
