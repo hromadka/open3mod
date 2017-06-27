@@ -41,6 +41,8 @@ namespace open3mod
 {
     public partial class MainWindow : Form
     {
+        private String _modelname;
+
         private readonly UiState _ui;
         private Renderer _renderer;
         private readonly FpsTracker _fps;
@@ -574,6 +576,8 @@ namespace open3mod
                     return;
                 }
                 t.Text = t.Text.Substring(0,t.Text.Length - LoadingTitlePostfix.Length);
+
+                _modelname = t.Text;
 
                 if (tab.State == Tab.TabState.Failed)
                 {
@@ -1348,6 +1352,8 @@ namespace open3mod
 
         private void godFunction()
         {
+            // this is just for testing purposes
+
             // want: rotate CW or CCW along plane of view POV  (the overhead look)
             // --> soln = they implemented pitch and roll, but we need *yaw*
             // first, lock on to Z-axis, then change back to Orbit camera mode
@@ -1359,8 +1365,7 @@ namespace open3mod
                 m_bCameraModeSet = true;
             }
             UiState.ActiveTab.ActiveCameraController.Yaw(10);  // in degrees
-
-            
+               
             
         }
 
@@ -1386,12 +1391,14 @@ namespace open3mod
 
         private void toolStripButton2_Click(object sender, EventArgs e)
         {
-            String fname;
+            String fname, prefix;
             Bitmap bmp;
+
+            prefix = _modelname.Substring(0, Math.Min(8, _modelname.Length)); 
 
             for (int i = 0; i < 360; i++)
             {
-                fname = "images/image-" + i.ToString() + ".png";
+                fname = "images/" + prefix + "-" + i.ToString() + ".png";
                 if (!m_bCameraModeSet)
                 {
                     UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
