@@ -1391,14 +1391,34 @@ namespace open3mod
 
         private void toolStripButton2_Click(object sender, EventArgs e)
         {
-            String fname, prefix;
+            ////////////////////////////////////////////////////
+            // first half of this is all just filename handling
+            String fname, prefix, fpath;
+            
+            prefix = _modelname.Substring(0, Math.Min(8, _modelname.Length));
+            if (prefix.Contains(".")) {
+                prefix = prefix.Substring(0,prefix.IndexOf("."));
+            }
+
+            fpath = getDesktopSubFolder(prefix);
+
+            int index = 0;
+            string[] files = Directory.GetFiles(fpath, "*.png");
+            if (files.Count() > 0) {
+                // this requires padded-left number strings in filenames
+                Array.Sort(files, StringComparer.InvariantCulture);
+                // don't include ".png" in substring
+                String last = files[files.Count()-1].Substring(files[files.Count()-1].Length-10,6);
+                index = Convert.ToInt32(last);
+            }
+
+            ////////////////////////////////////
+            // second half: the actual graphics
             Bitmap bmp;
 
-            prefix = _modelname.Substring(0, Math.Min(8, _modelname.Length)); 
-
-            for (int i = 0; i < 360; i++)
+            for (int i = index+1; i < index+360; i++)
             {
-                fname = "images/" + prefix + "-" + i.ToString() + ".png";
+                fname = fpath + "/" + prefix + "-" + getPaddedIndex(i) + ".png";
                 if (!m_bCameraModeSet)
                 {
                     UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
@@ -1424,6 +1444,34 @@ namespace open3mod
         private String getFormattedTimestamp()
         {
             return DateTime.Now.ToString("yyyyMMddHHmmssff");
+        }
+
+        private String getDesktopSubFolder(String subfolder)
+        {
+            string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),subfolder);
+
+            if (!System.IO.Directory.Exists(path))
+            {
+                try
+                {
+                    System.IO.Directory.CreateDirectory(path);
+                }
+                catch (IOException ie)
+                {
+                    Console.WriteLine("IO Error: " + ie.Message);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("General Error: " + e.Message);
+                }
+            }
+
+            return path;
+        }
+
+        private String getPaddedIndex(int i)
+        {
+            return String.Format("{0:000000}", i);
         }
     }
 }
