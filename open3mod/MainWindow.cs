@@ -1418,7 +1418,7 @@ namespace open3mod
 
             for (int i = index+1; i < index+360; i++)
             {
-                fname = fpath + "/" + prefix + "-" + getPaddedIndex(i) + ".png";
+                fname = prefix + "-" + getPaddedIndex(i) + ".png";
                 if (!m_bCameraModeSet)
                 {
                     UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
@@ -1431,7 +1431,11 @@ namespace open3mod
 
                 // I know this is deprecated, but it's simple and works today, which is enough
                 bmp = glControl1.GrabScreenshot();
-                bmp.Save(fname, ImageFormat.Png);
+                bmp.Save(fpath + "\\" + fname, ImageFormat.Png);
+
+                // ML output
+                String classname = prefix;  // placeholder for now.
+                appendTrainingFile(fpath, fname, classname);
             }
             MessageBox.Show("done!");
         }
@@ -1471,7 +1475,33 @@ namespace open3mod
 
         private String getPaddedIndex(int i)
         {
+            // "640K ought to be enough for anybody" 
             return String.Format("{0:000000}", i);
+        }
+
+        private void appendTrainingFile(String fpath, String fname, String classname)
+        {
+            appendTFTrainingFile(fpath, fname, classname);
+        }
+
+        private void appendTFTrainingFile(String fpath, String fname, String classname)
+        {
+            // assumes one training file per class, and that the 
+            // end user will mix & match from different training sets
+            String path = fpath + "\\" + classname + ".csv";
+            
+            if (!File.Exists(path))
+            {
+                StreamWriter sw = File.CreateText(path);
+                sw.Close();
+            }
+
+            using (StreamWriter sw = File.AppendText(path))
+            {
+                sw.WriteLine(fname + "," + classname);
+                sw.Close();
+            }	
+            
         }
     }
 }
