@@ -1,3 +1,6 @@
+Un-forked from the original because it had diverged too much.  This version is meant for generating training data for TensorFlow, Caffe, etc from 3D models.
+
+Based on https://github.com/acgessler/open3mod :
 # Open 3D Model Viewer 
 
 A general-purpose 3D model viewer. Based on 
@@ -5,28 +8,29 @@ A general-purpose 3D model viewer. Based on
 reading about __fourty 3D file formats__, including __FBX, DXF, Collada, Obj, X, PLY, 3DS, LWO, LWS, STL__ 
 and  __IFC__ ([full list](http://assimp.sourceforge.net/main_features_formats.html)).
 
-![Screenshot of open3mod (09-05-2013)](http://s1.directupload.net/images/130509/44lqi4p9.png)
-
-__Some key features:__
-
- - Powerful 3D preview that leverages modern rendering and lighting technologies and thus gives a good impression of how
-   scenes would look in a modern 3D game, or even in non-realtime renderings.
- - Skeletal animation playback at arbitrary speed or single-step.
- - Efficient tools to inspect the scene or parts of it. Filtering and isolating elements is made as easy as possible.
- - Tabbed UI, so multiple scenes can be open at the same time
- - Replace textures and fix missing paths by Drag & Drop
- - Multiple viewports (up to 4) and different camera modes such as orbit cameras or even First-Person
- - A multitude of texture file formats is supported through DevIL. Textures are being loaded asynchronously, so there
-   are no extra waiting times if you only care about geometry
- - Export of scenes (or parts of scenes) is supported. Output formats include Collada, PLY, STL, OBJ 
-   (as of now).
 
 ## License
 
 3-clause BSD license. Read `LICENSE` for the details, but it boils down to "use as you like but reproduce the copyright notice".
 
-## Contribute
+///////////////////////////////////////////////////////////////////////////////////
+// Open 3D Model Viewer (open3mod) (v2.0)
+// [About.cs]
+// (c) 2012-2015, Open3Mod Contributors
+//
+// Licensed under the terms and conditions of the 3-clause BSD license. See
+// the LICENSE file in the root folder of the repository for the details.
+//
+// HIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND 
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+///////////////////////////////////////////////////////////////////////////////////
 
-Contributions to the projects are highly appreciated. Simply fork the project on Github, hack, and send me a PR.
 
-As a starter, lots of open3mod features (such as high-quality rendering) have been started and are present in the codebase, but are currently disabled. Contact me if you'd like to help out, but don't know where to start.
