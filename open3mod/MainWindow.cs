@@ -1416,27 +1416,39 @@ namespace open3mod
             // second half: the actual graphics
             Bitmap bmp;
 
-            for (int i = index+1; i < index+360; i++)
+            //_renderer.hideHud();
+            //_renderer.Draw(UiState.ActiveTab);
+
+            int step = 30;  // in degrees
+            for (int i = index; i < index+360; i+=step)
             {
                 fname = prefix + "-" + getPaddedIndex(i) + ".png";
                 if (!m_bCameraModeSet)
                 {
-                    UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
+                    //UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
                     UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Orbit);
                     m_bCameraModeSet = true;
                 }
-                UiState.ActiveTab.ActiveCameraController.Yaw(1);  // in degrees
+                UiState.ActiveTab.ActiveCameraController.Yaw(step);  // in degrees
                 Application.DoEvents();  // wait for OpenGL surface to go "idle" and redraw
                 glControl1.Refresh();
 
                 // I know this is deprecated, but it's simple and works today, which is enough
                 bmp = glControl1.GrabScreenshot();
+
+                // doesn't work
+                bmp.MakeTransparent(_renderer.getActiveViewColor());
+
                 bmp.Save(fpath + "\\" + fname, ImageFormat.Png);
 
                 // ML output
                 String classname = prefix;  // placeholder for now.
                 appendTrainingFile(fpath, fname, classname);
             }
+
+            //_renderer.showHud();
+            //_renderer.Draw(UiState.ActiveTab);
+
             MessageBox.Show("done!");
         }
 

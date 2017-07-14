@@ -102,6 +102,10 @@ namespace open3mod
             get { return CoreSettings.CoreSettings.Default.BackgroundColor; }
         }
 
+        public Color getActiveViewColor() 
+        {
+            return ActiveViewColor;
+        }
 
         protected Color ActiveViewColor
         {
@@ -347,6 +351,8 @@ namespace open3mod
         /// </summary>
         private void DrawHud()
         {
+            return;
+
             // sanity check whether the _hoverViewIndex is ok
             var ui = Window.UiState.ActiveTab;
             if(ui.ActiveViews[(int)_hoverViewIndex] == null)
@@ -459,8 +465,8 @@ namespace open3mod
                     (x2 - x1) * RenderResolution.Width,
                     (y2 - y1) * RenderResolution.Height);
 
-                DrawShadowedString(graphics, "Press [R] to reset the view", Window.UiState.DefaultFont10,
-                    rect, Color.Black, Color.FromArgb(50, Color.White), format);         
+//                DrawShadowedString(graphics, "Press [R] to reset the view", Window.UiState.DefaultFont10,
+//                    rect, Color.Black, Color.FromArgb(50, Color.White), format);         
             }
 
             // draw all the buttons on the HUD
@@ -562,6 +568,19 @@ namespace open3mod
                 _hudDirty = true;
             }
         }
+
+        public void hideHud()
+        {
+            _hudHidden = true;
+            _hudDirty = true;
+        }
+
+        public void showHud()
+        {
+            _hudHidden = false;
+            _hudDirty = true;
+        }
+
 
 
         private static readonly string[] DescTable = new[] 
