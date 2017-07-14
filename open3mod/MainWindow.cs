@@ -74,6 +74,13 @@ namespace open3mod
 
         public Boolean m_bCameraModeSet = false;
 
+        private enum ImageType { PNG, JPEG };
+        private ImageType _imageType = ImageType.PNG;
+
+        private enum ImageBackground { DEFAULT_GRAY, TRANSPARENT, NOISE };
+        private ImageBackground _imageBackground = ImageBackground.NOISE;
+
+        private int _step = 1; // in degrees
 
         public GLControl GlControl
         {
@@ -1403,7 +1410,19 @@ namespace open3mod
             fpath = getDesktopSubFolder(prefix);
 
             int index = 0;
-            string[] files = Directory.GetFiles(fpath, "*.png");
+
+            string[] files; 
+            switch (_imageType)
+            {
+                case ImageType.JPEG:
+                    files = Directory.GetFiles(fpath, "*.jpg");
+                    break;
+                case ImageType.PNG:
+                default:
+                    files = Directory.GetFiles(fpath, "*.png");
+                    break;
+            }
+
             if (files.Count() > 0) {
                 // this requires padded-left number strings in filenames
                 Array.Sort(files, StringComparer.InvariantCulture);
@@ -1419,27 +1438,70 @@ namespace open3mod
             //_renderer.hideHud();
             //_renderer.Draw(UiState.ActiveTab);
 
-            int step = 30;  // in degrees
-            for (int i = index; i < index+360; i+=step)
+            for (int i = index; i < index+360; i+=_step)
             {
-                fname = prefix + "-" + getPaddedIndex(i) + ".png";
+                switch (_imageType)
+                {
+                    case ImageType.JPEG:
+                        fname = prefix + "-" + getPaddedIndex(i) + ".jpg";
+                        break;
+                    case ImageType.PNG:
+                    default:
+                        fname = prefix + "-" + getPaddedIndex(i) + ".png";
+                        break;
+                }
+
                 if (!m_bCameraModeSet)
                 {
                     //UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
                     UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Orbit);
                     m_bCameraModeSet = true;
                 }
-                UiState.ActiveTab.ActiveCameraController.Yaw(step);  // in degrees
+                UiState.ActiveTab.ActiveCameraController.Yaw(_step);  // in degrees
                 Application.DoEvents();  // wait for OpenGL surface to go "idle" and redraw
                 glControl1.Refresh();
 
                 // I know this is deprecated, but it's simple and works today, which is enough
                 bmp = glControl1.GrabScreenshot();
 
-                // doesn't work
-                bmp.MakeTransparent(_renderer.getActiveViewColor());
+                switch (_imageBackground)
+                {
+                    case ImageBackground.NOISE:
+                        Color pointColor;
+                        Color bkgdColor = _renderer.getActiveViewColor();
+                        Random rand = new Random();
+                        for (int x = 0; x < bmp.Width; x++)
+                        {
+                            for (int y = 0; y < bmp.Height; y++)
+                            {
+                                if (bmp.GetPixel(x, y) == bkgdColor)
+                                {
+                                    int R = rand.Next(0, 255);
+                                    int G = rand.Next(0, 255);
+                                    int B = rand.Next(0, 255);
+                                    pointColor = Color.FromArgb(R, G, B);
+                                    bmp.SetPixel(x, y, pointColor);
+                                }
+                            }
+                        }
+                        break;
+                    case ImageBackground.TRANSPARENT:
+                        bmp.MakeTransparent(_renderer.getActiveViewColor());
+                        break;
+                }
 
-                bmp.Save(fpath + "\\" + fname, ImageFormat.Png);
+
+
+                switch (_imageType)
+                {
+                    case ImageType.JPEG:
+                        bmp.Save(fpath + "\\" + fname, ImageFormat.Jpeg);
+                        break;
+                    case ImageType.PNG:
+                        bmp.Save(fpath + "\\" + fname, ImageFormat.Png);
+                        break;
+                }
+
 
                 // ML output
                 String classname = prefix;  // placeholder for now.
@@ -1454,7 +1516,15 @@ namespace open3mod
 
         private String getFilename()
         {
-            return "image-" + getFormattedTimestamp() + ".png";
+            switch (_imageType)
+            {
+                case ImageType.JPEG:
+                    return "image-" + getFormattedTimestamp() + ".jpg";
+                case ImageType.PNG:
+                default:
+                    return "image-" + getFormattedTimestamp() + ".png";
+            }
+
         }
 
         private String getFormattedTimestamp()
