@@ -80,7 +80,7 @@ namespace open3mod
         private enum ImageBackground { DEFAULT_GRAY, TRANSPARENT, NOISE };
         private ImageBackground _imageBackground = ImageBackground.NOISE;
 
-        private int _step = 30; // in degrees
+        private int _step = 3; // in degrees
 
         public GLControl GlControl
         {
@@ -1432,7 +1432,7 @@ namespace open3mod
                 Array.Sort(files, StringComparer.InvariantCulture);
                 // don't include ".png" in substring
                 String last = files[files.Count()-1].Substring(files[files.Count()-1].Length-10,6);
-                index = Convert.ToInt32(last);
+                index = Convert.ToInt32(last)+1;
             }
 
             ////////////////////////////////////
