@@ -75,12 +75,12 @@ namespace open3mod
         public Boolean m_bCameraModeSet = false;
 
         private enum ImageType { PNG, JPEG };
-        private ImageType _imageType = ImageType.PNG;
+        private ImageType _imageType = ImageType.JPEG;
 
         private enum ImageBackground { DEFAULT_GRAY, TRANSPARENT, NOISE };
         private ImageBackground _imageBackground = ImageBackground.NOISE;
 
-        private int _step = 1; // in degrees
+        private int _step = 30; // in degrees
 
         public GLControl GlControl
         {
@@ -1407,7 +1407,11 @@ namespace open3mod
                 prefix = prefix.Substring(0,prefix.IndexOf("."));
             }
 
-            fpath = getDesktopSubFolder(prefix);
+            // strip out any blankspaces
+            prefix = prefix.Replace(" ", "");
+            if (prefix.Length < 1) prefix = "NAMELESS";
+
+            fpath = getDesktopSubFolder("models-output\\" + prefix);
 
             int index = 0;
 
@@ -1453,7 +1457,7 @@ namespace open3mod
 
                 if (!m_bCameraModeSet)
                 {
-                    //UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
+                    UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
                     UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Orbit);
                     m_bCameraModeSet = true;
                 }
@@ -1463,7 +1467,16 @@ namespace open3mod
 
                 // I know this is deprecated, but it's simple and works today, which is enough
                 bmp = glControl1.GrabScreenshot();
+                
+                // get bounding box
+                Rectangle bbox = getBoundingBox(bmp);
+//                using (var graphics = Graphics.FromImage(bmp))
+//                {
+//                    graphics.DrawRectangle(new Pen(Color.Red, 3), bbox);
+//                }
 
+
+                // optional image background treatment
                 switch (_imageBackground)
                 {
                     case ImageBackground.NOISE:
@@ -1505,7 +1518,9 @@ namespace open3mod
 
                 // ML output
                 String classname = prefix;  // placeholder for now.
-                appendTrainingFile(fpath, fname, classname);
+
+                //appendTrainingFile(fpath, fname, classname);
+                appendTrainingFile2(fpath, fname, classname, bmp.Width, bmp.Height, bbox);
             }
 
             //_renderer.showHud();
@@ -1561,6 +1576,8 @@ namespace open3mod
             return String.Format("{0:000000}", i);
         }
 
+        // end-user keeps requesting file format changes.  Should refactor this
+        // to be a <T> to output arbitrary text
         private void appendTrainingFile(String fpath, String fname, String classname)
         {
             appendTFTrainingFile(fpath, fname, classname);
@@ -1584,6 +1601,122 @@ namespace open3mod
                 sw.Close();
             }	
             
+        }
+
+        private void appendTrainingFile2(String fpath, String fname, String classname, int w, int h, Rectangle bounds)
+        {
+            // assumes one training file per class, and that the 
+            // end user will mix & match from different training sets
+            String path = fpath + "\\" + classname + ".csv";
+
+            if (!File.Exists(path))
+            {
+                StreamWriter sw = File.CreateText(path);
+                sw.Close();
+            }
+
+            using (StreamWriter sw = File.AppendText(path))
+            {
+                sw.WriteLine(fname 
+                    + "," + w.ToString()
+                    + "," + h.ToString()
+                    + "," + bounds.X.ToString()
+                    + "," + bounds.Y.ToString()
+                    + "," + (bounds.X + bounds.Width).ToString()
+                    + "," + (bounds.Y + bounds.Height).ToString());
+                sw.Close();
+            }
+
+        }
+
+
+        private Rectangle getBoundingBox(Bitmap bmp)
+        {
+            // cheeseball algorithm for getting pixel positions in OpenGL space:
+            // convert to raster, then march inwards until reach the model.
+            const int BAD_VALUE = -1;
+            int x1, x2, y1, y2;
+            x1 = x2 = y1 = y2 = BAD_VALUE;
+
+            Color empty = _renderer.getActiveViewColor();
+            int emptysumX = bmp.Width * (empty.R + empty.G + empty.B + empty.A);
+            int emptysumY = bmp.Height * (empty.R + empty.G + empty.B + empty.A);
+            int pixelsum = 0;
+
+            for (int x = 0; x < bmp.Width; x++)
+            {
+                pixelsum = 0;
+                for (int y = 0; y < bmp.Height; y++)
+                {
+                    empty = bmp.GetPixel(x, y);
+                    //Console.WriteLine(x + "," + empty.ToArgb().ToString() + "," + (empty.R + empty.G + empty.B + empty.A).ToString() + "," + pixelsum.ToString());
+                    int pixelvalue = empty.R + empty.G + empty.B + empty.A;
+                    pixelsum += pixelvalue;
+                }
+                if (pixelsum != emptysumY)
+                {
+                    x1 = x;
+                    break;
+                }
+            }
+
+            for (int x = bmp.Width-1; x > -1; x--)
+            {
+                pixelsum = 0;
+                for (int y = 0; y < bmp.Height; y++)
+                {
+                    empty = bmp.GetPixel(x, y);
+                    //Console.WriteLine(x + "," + empty.ToArgb().ToString() + "," + (empty.R + empty.G + empty.B + empty.A).ToString() + "," + pixelsum.ToString());
+                    int pixelvalue = empty.R + empty.G + empty.B + empty.A;
+                    pixelsum += pixelvalue;
+                }
+                if (pixelsum != emptysumY)
+                {
+                    x2 = x;
+                    break;
+                }
+            }
+
+            for (int y = bmp.Height-1; y > -1; y--)
+            {
+                pixelsum = 0;
+                for (int x = 0; x < bmp.Width; x++)
+                {
+                    empty = bmp.GetPixel(x, y);
+                    //Console.WriteLine(x + "," + empty.ToArgb().ToString() + "," + (empty.R + empty.G + empty.B + empty.A).ToString() + "," + pixelsum.ToString());
+                    int pixelvalue = empty.R + empty.G + empty.B + empty.A;
+                    pixelsum += pixelvalue;
+                }
+                if (pixelsum != emptysumX)
+                {
+                    y2 = y;
+                    break;
+                }
+            }
+
+            for (int y = 0; y < bmp.Height; y++)
+            {
+                pixelsum = 0;
+                for (int x = 0; x < bmp.Width; x++)
+                {
+                    empty = bmp.GetPixel(x, y);
+                    //Console.WriteLine(x + "," + empty.ToArgb().ToString() + "," + (empty.R + empty.G + empty.B + empty.A).ToString() + "," + pixelsum.ToString());
+                    int pixelvalue = empty.R + empty.G + empty.B + empty.A;
+                    pixelsum += pixelvalue;
+                }
+                if (pixelsum != emptysumX)
+                {
+                    y1 = y;
+                    break;
+                }
+            }
+
+            if (x1 == BAD_VALUE || x2 == BAD_VALUE || y1 == BAD_VALUE || y2 == BAD_VALUE)
+            {
+                MessageBox.Show("error computing bounding box!");
+            }
+
+            return new Rectangle(x1, y1, x2-x1, y2-y1);
         }
     }
 }
