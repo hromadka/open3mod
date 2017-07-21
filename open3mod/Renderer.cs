@@ -118,6 +118,11 @@ namespace open3mod
             }
         }
 
+        public void SetActiveViewColor(Color c)
+        {
+            CoreSettings.CoreSettings.Default.BackgroundColor = c;
+        }
+
 
         protected float HudHoverTime
         {

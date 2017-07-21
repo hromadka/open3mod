@@ -77,8 +77,8 @@ namespace open3mod
         private enum ImageType { PNG, JPEG };
         private ImageType _imageType = ImageType.JPEG;
 
-        private enum ImageBackground { DEFAULT_GRAY, TRANSPARENT, NOISE };
-        private ImageBackground _imageBackground = ImageBackground.NOISE;
+        private enum ImageBackground { DEFAULT_GRAY, TRANSPARENT, NOISE};
+        private ImageBackground _imageBackground = ImageBackground.DEFAULT_GRAY;
 
         private int _step = 3; // in degrees
 
@@ -1367,13 +1367,12 @@ namespace open3mod
 
             if (!m_bCameraModeSet)
             {
-                UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
+                //UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
                 UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Orbit);
                 m_bCameraModeSet = true;
             }
+
             UiState.ActiveTab.ActiveCameraController.Yaw(10);  // in degrees
-               
-            
         }
 
         private void deleteMe()
@@ -1461,7 +1460,13 @@ namespace open3mod
                     UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Orbit);
                     m_bCameraModeSet = true;
                 }
-                UiState.ActiveTab.ActiveCameraController.Yaw(_step);  // in degrees
+
+                
+                // this rotates target along vertical axis of view POV 
+                UiState.ActiveTab.ActiveCameraController.MouseMove(_step, 0);
+                // this rotates target clockwise
+                //UiState.ActiveTab.ActiveCameraController.Yaw(_step);  // in degrees
+
                 Application.DoEvents();  // wait for OpenGL surface to go "idle" and redraw
                 glControl1.Refresh();
 
@@ -1501,6 +1506,24 @@ namespace open3mod
                     case ImageBackground.TRANSPARENT:
                         bmp.MakeTransparent(_renderer.getActiveViewColor());
                         break;
+                    /* removed this code, and left it commented out in order to
+                     * document that open3mod already has a background color chooser
+                     * under the Edit drop-down menu in the MainWindow.  
+                     * See OnChangeBackgroundColor()
+                     */
+                    //case ImageBackground.WHITE:
+                    //    if (_renderer.getActiveViewColor() != Color.White)
+                    //    {
+                    //        _renderer.SetActiveViewColor(Color.White);
+                    //    }
+                    //    break;
+                    //case ImageBackground.BLACK:
+                    //    if (_renderer.getActiveViewColor() != Color.Black)
+                    //    {
+                    //        _renderer.SetActiveViewColor(Color.Black);
+                    //    }
+                    //    break;
+
                 }
 
 
@@ -1717,6 +1740,16 @@ namespace open3mod
             }
 
             return new Rectangle(x1, y1, x2-x1, y2-y1);
+        }
+
+        private void backgroundTransparentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _imageBackground = ImageBackground.TRANSPARENT;
+        }
+
+        private void backgroundRGBNoiseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _imageBackground = ImageBackground.NOISE;
         }
     }
 }
