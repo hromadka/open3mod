@@ -1441,7 +1441,7 @@ namespace open3mod
             //_renderer.hideHud();
             //_renderer.Draw(UiState.ActiveTab);
 
-            for (int i = index; i < index+360; i+=_step)
+            for (int i = index; i < index+(360*_step); i+=_step)
             {
                 switch (_imageType)
                 {
