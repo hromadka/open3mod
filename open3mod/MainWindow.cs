@@ -80,7 +80,7 @@ namespace open3mod
         private enum ImageBackground { DEFAULT_GRAY, TRANSPARENT, NOISE};
         private ImageBackground _imageBackground = ImageBackground.DEFAULT_GRAY;
 
-        private int _step = 3; // in degrees
+        private int _step = 1; // in degrees
 
         public GLControl GlControl
         {
@@ -1397,6 +1397,14 @@ namespace open3mod
 
         private void toolStripButton2_Click(object sender, EventArgs e)
         {
+            if (!m_bCameraModeSet)
+            {
+                MessageBox.Show("Camera mode not locked!  Locking mode now.");
+                m_bCameraModeSet = true;
+                return;
+            }
+
+
             ////////////////////////////////////////////////////
             // first half of this is all just filename handling
             String fname, prefix, fpath;
@@ -1440,110 +1448,128 @@ namespace open3mod
 
             //_renderer.hideHud();
             //_renderer.Draw(UiState.ActiveTab);
+            int ROTATION_MAX = 90;
+            int ROTATION_TOTAL = index + (ROTATION_MAX * _step);
+            int YAW_MAX = 30;
 
-            for (int i = index; i < index+(360*_step); i+=_step)
+            for (int j = 0; j < YAW_MAX; j += _step)
             {
-                switch (_imageType)
+                // at end of the inner loop, rotate the object through yaw, and then reset & re-run
+                for (int i = index; i < ROTATION_TOTAL; i += _step)
                 {
-                    case ImageType.JPEG:
-                        fname = prefix + "-" + getPaddedIndex(i) + ".jpg";
-                        break;
-                    case ImageType.PNG:
-                    default:
-                        fname = prefix + "-" + getPaddedIndex(i) + ".png";
-                        break;
+                    switch (_imageType)
+                    {
+                        case ImageType.JPEG:
+                            fname = prefix + "-" + getPaddedIndex3(j) + getPaddedIndex6(i) + ".jpg";
+                            break;
+                        case ImageType.PNG:
+                        default:
+                            fname = prefix + "-" + getPaddedIndex3(j) + getPaddedIndex6(i) + ".png";
+                            break;
+                    }
+
+                    if (!m_bCameraModeSet)
+                    {
+                        UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
+                        UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Orbit);
+                        m_bCameraModeSet = true;
+                    }
+
+
+                    // this rotates target along vertical axis of view POV 
+                    UiState.ActiveTab.ActiveCameraController.MouseMove(_step, 0);
+                    // this rotates target clockwise
+                    //UiState.ActiveTab.ActiveCameraController.Yaw(_step);  // in degrees
+
+                    Application.DoEvents();  // wait for OpenGL surface to go "idle" and redraw
+                    glControl1.Refresh();
+
+                    // I know this is deprecated, but it's simple and works today, which is enough
+                    bmp = glControl1.GrabScreenshot();
+
+                    // get bounding box
+                    Rectangle bbox = getBoundingBox(bmp);
+                    //                using (var graphics = Graphics.FromImage(bmp))
+                    //                {
+                    //                    graphics.DrawRectangle(new Pen(Color.Red, 3), bbox);
+                    //                }
+
+
+                    // optional image background treatment
+                    switch (_imageBackground)
+                    {
+                        case ImageBackground.NOISE:
+                            Color pointColor;
+                            Color bkgdColor = _renderer.getActiveViewColor();
+                            Random rand = new Random();
+                            for (int x = 0; x < bmp.Width; x++)
+                            {
+                                for (int y = 0; y < bmp.Height; y++)
+                                {
+                                    if (bmp.GetPixel(x, y) == bkgdColor)
+                                    {
+                                        int R = rand.Next(0, 255);
+                                        int G = rand.Next(0, 255);
+                                        int B = rand.Next(0, 255);
+                                        pointColor = Color.FromArgb(R, G, B);
+                                        bmp.SetPixel(x, y, pointColor);
+                                    }
+                                }
+                            }
+                            break;
+                        case ImageBackground.TRANSPARENT:
+                            bmp.MakeTransparent(_renderer.getActiveViewColor());
+                            break;
+                        /* removed this code, and left it commented out in order to
+                         * document that open3mod already has a background color chooser
+                         * under the Edit drop-down menu in the MainWindow.  
+                         * See OnChangeBackgroundColor()
+                         */
+                        //case ImageBackground.WHITE:
+                        //    if (_renderer.getActiveViewColor() != Color.White)
+                        //    {
+                        //        _renderer.SetActiveViewColor(Color.White);
+                        //    }
+                        //    break;
+                        //case ImageBackground.BLACK:
+                        //    if (_renderer.getActiveViewColor() != Color.Black)
+                        //    {
+                        //        _renderer.SetActiveViewColor(Color.Black);
+                        //    }
+                        //    break;
+
+                    }
+
+
+
+                    switch (_imageType)
+                    {
+                        case ImageType.JPEG:
+                            bmp.Save(fpath + "\\" + fname, ImageFormat.Jpeg);
+                            break;
+                        case ImageType.PNG:
+                            bmp.Save(fpath + "\\" + fname, ImageFormat.Png);
+                            break;
+                    }
+
+
+                    // ML output
+                    String classname = prefix;  // placeholder for now.
+
+                    //appendTrainingFile(fpath, fname, classname);
+                    appendTrainingFile2(fpath, fname, classname, bmp.Width, bmp.Height, bbox);
                 }
 
-                if (!m_bCameraModeSet)
-                {
-                    UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Z);
-                    UiState.ActiveTab.ChangeActiveCameraMode(CameraMode.Orbit);
-                    m_bCameraModeSet = true;
-                }
 
-                
                 // this rotates target along vertical axis of view POV 
-                UiState.ActiveTab.ActiveCameraController.MouseMove(_step, 0);
-                // this rotates target clockwise
-                //UiState.ActiveTab.ActiveCameraController.Yaw(_step);  // in degrees
+                UiState.ActiveTab.ActiveCameraController.MouseMove(-1 * ROTATION_TOTAL, 0);
+
+                UiState.ActiveTab.ActiveCameraController.Yaw(_step);  // in degrees
+                Console.WriteLine("j = " + j);
 
                 Application.DoEvents();  // wait for OpenGL surface to go "idle" and redraw
                 glControl1.Refresh();
 
-                // I know this is deprecated, but it's simple and works today, which is enough
-                bmp = glControl1.GrabScreenshot();
-                
-                // get bounding box
-                Rectangle bbox = getBoundingBox(bmp);
-//                using (var graphics = Graphics.FromImage(bmp))
-//                {
-//                    graphics.DrawRectangle(new Pen(Color.Red, 3), bbox);
-//                }
-
-
-                // optional image background treatment
-                switch (_imageBackground)
-                {
-                    case ImageBackground.NOISE:
-                        Color pointColor;
-                        Color bkgdColor = _renderer.getActiveViewColor();
-                        Random rand = new Random();
-                        for (int x = 0; x < bmp.Width; x++)
-                        {
-                            for (int y = 0; y < bmp.Height; y++)
-                            {
-                                if (bmp.GetPixel(x, y) == bkgdColor)
-                                {
-                                    int R = rand.Next(0, 255);
-                                    int G = rand.Next(0, 255);
-                                    int B = rand.Next(0, 255);
-                                    pointColor = Color.FromArgb(R, G, B);
-                                    bmp.SetPixel(x, y, pointColor);
-                                }
-                            }
-                        }
-                        break;
-                    case ImageBackground.TRANSPARENT:
-                        bmp.MakeTransparent(_renderer.getActiveViewColor());
-                        break;
-                    /* removed this code, and left it commented out in order to
-                     * document that open3mod already has a background color chooser
-                     * under the Edit drop-down menu in the MainWindow.  
-                     * See OnChangeBackgroundColor()
-                     */
-                    //case ImageBackground.WHITE:
-                    //    if (_renderer.getActiveViewColor() != Color.White)
-                    //    {
-                    //        _renderer.SetActiveViewColor(Color.White);
-                    //    }
-                    //    break;
-                    //case ImageBackground.BLACK:
-                    //    if (_renderer.getActiveViewColor() != Color.Black)
-                    //    {
-                    //        _renderer.SetActiveViewColor(Color.Black);
-                    //    }
-                    //    break;
-
-                }
-
-
-
-                switch (_imageType)
-                {
-                    case ImageType.JPEG:
-                        bmp.Save(fpath + "\\" + fname, ImageFormat.Jpeg);
-                        break;
-                    case ImageType.PNG:
-                        bmp.Save(fpath + "\\" + fname, ImageFormat.Png);
-                        break;
-                }
-
-
-                // ML output
-                String classname = prefix;  // placeholder for now.
-
-                //appendTrainingFile(fpath, fname, classname);
-                appendTrainingFile2(fpath, fname, classname, bmp.Width, bmp.Height, bbox);
             }
 
             //_renderer.showHud();
@@ -1593,10 +1619,16 @@ namespace open3mod
             return path;
         }
 
-        private String getPaddedIndex(int i)
+        private String getPaddedIndex6(int i)
         {
             // "640K ought to be enough for anybody" 
             return String.Format("{0:000000}", i);
+        }
+
+        private String getPaddedIndex3(int i)
+        {
+            // "640K ought to be enough for anybody" 
+            return String.Format("{0:000}", i);
         }
 
         // end-user keeps requesting file format changes.  Should refactor this

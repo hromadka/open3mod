@@ -973,9 +973,9 @@ namespace open3mod
             | System.Windows.Forms.AnchorStyles.Right)));
             this.glControl1.BackColor = System.Drawing.Color.Black;
             this.glControl1.Location = new System.Drawing.Point(177, 70);
-            this.glControl1.MaximumSize = new System.Drawing.Size(512, 512);
+            this.glControl1.MaximumSize = new System.Drawing.Size(256, 256);
             this.glControl1.Name = "glControl1";
-            this.glControl1.Size = new System.Drawing.Size(512, 512);
+            this.glControl1.Size = new System.Drawing.Size(256, 256);
             this.glControl1.TabIndex = 0;
             this.glControl1.VSync = true;
             this.glControl1.Load += new System.EventHandler(this.OnGlLoad);
